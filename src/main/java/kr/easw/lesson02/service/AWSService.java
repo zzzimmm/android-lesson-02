@@ -32,6 +32,7 @@ public class AWSService {
                 s3Client.listObjects(bucket.getName())
                         .getObjectSummaries()
                         .forEach(it -> s3Client.deleteObject(bucket.getName(), it.getKey()));
+                s3Client.deleteBucket(bucket.getName());
             }
         }
         s3Client.createBucket(BUCKET_NAME);
