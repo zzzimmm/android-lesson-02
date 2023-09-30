@@ -3,14 +3,25 @@ package kr.easw.lesson02.controller;
 import kr.easw.lesson02.model.dto.AWSKeyDto;
 import kr.easw.lesson02.service.AWSService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+
 @RequestMapping("/api/v1/rest/aws")
 public class AWSConroller {
     private final AWSService awsController;
@@ -42,14 +53,24 @@ public class AWSConroller {
         }
     }
 
-
-    @PostMapping("/download")
-    private ModelAndView onDownload(@RequestParam String fileName) {
+    @GetMapping("/download")
+    private ResponseEntity<Resource> onDownload(@RequestParam String fileName) throws IOException {
         try {
-           // 이곳에 파일 다운로드 로직, 혹은 서비스를 통한 다운로드 호출을 구현하십시오.
-           throw new IllegalStateException("기능이 구현되지 않았습니다.");
-        } catch (Throwable e) {
-            return new ModelAndView("redirect:/server-error?errorStatus=" + e.getMessage());
+            byte[] fileContent = awsController.download(fileName);
+
+            ByteArrayResource resource = new ByteArrayResource(fileContent);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(fileContent.length)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(resource);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().body(new ByteArrayResource(ex.getMessage().getBytes()));
         }
     }
 

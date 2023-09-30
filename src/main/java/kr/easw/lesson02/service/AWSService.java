@@ -5,13 +5,16 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
+
 import kr.easw.lesson02.model.dto.AWSKeyDto;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.amazonaws.services.s3.model.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -32,7 +35,6 @@ public class AWSService {
                 s3Client.listObjects(bucket.getName())
                         .getObjectSummaries()
                         .forEach(it -> s3Client.deleteObject(bucket.getName(), it.getKey()));
-                s3Client.deleteBucket(bucket.getName());
             }
         }
         s3Client.createBucket(BUCKET_NAME);
@@ -50,4 +52,19 @@ public class AWSService {
     public void upload(MultipartFile file) {
         s3Client.putObject(BUCKET_NAME, file.getOriginalFilename(), new ByteArrayInputStream(file.getResource().getContentAsByteArray()), new ObjectMetadata());
     }
+
+    @SneakyThrows
+    public byte[] download(String fileName) {
+        S3Object object = s3Client.getObject(BUCKET_NAME, fileName);
+        InputStream inputStream = object.getObjectContent();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        int bytesRead;
+        byte[] buffer = new byte[4096];
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            outputStream.write(buffer, 0, bytesRead);
+        }
+        inputStream.close();
+        return outputStream.toByteArray();
+    }
+
 }

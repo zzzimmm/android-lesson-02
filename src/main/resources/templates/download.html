@@ -8,9 +8,26 @@
 
         </li>
     </body>
-    <head>
+<head>
         <script type="application/javascript">
-            // 이곳에 코드를 작성하십시오.
+            (async () => {
+                const response = await fetch('/api/v1/rest/aws/list');
+                const result = await response.json();
+                console.log(result);
+                const fileList = document.getElementById("file_list");
+
+                for (let i = 0; i < result.length; i++) {
+                    const fileName = result[i];
+
+                    // 파일 다운로드 링크 생성
+                    const li = document.createElement("li");
+                    const a = document.createElement("a");
+                    a.href = `/api/v1/rest/aws/download?fileName=${fileName}`; // 다운로드 URL 설정
+                    a.innerText = fileName;
+                    li.appendChild(a);
+                    fileList.appendChild(li);
+                }
+            })();
         </script>
     </head>
 </html>
